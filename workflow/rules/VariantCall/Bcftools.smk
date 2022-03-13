@@ -1,9 +1,10 @@
-ruleorder: pseudoautosomal_region > ploidy_file > samples_file > bcftools_varcall
 rule bcftools_varcall:
     input:
         assembly=FASTA,
         samples=expand(alignment_dir_path / "{sample}/{assembly}.{sample}.sorted.mkdup.bam", assembly=ASSEMBLY, sample=SAMPLES.sample_id),
-        indexes=expand(alignment_dir_path / "{sample}/{assembly}.{sample}.sorted.mkdup.bam.bai", assembly=ASSEMBLY, sample=SAMPLES.sample_id)
+        indexes=expand(alignment_dir_path / "{sample}/{assembly}.{sample}.sorted.mkdup.bam.bai", assembly=ASSEMBLY, sample=SAMPLES.sample_id),
+        samples_file=assembly_stats_dir_path / (ASSEMBLY + ".samples.file"),
+        ploidy_file=assembly_stats_dir_path / (ASSEMBLY + ".ploidy.file")
     output:
         mpileup=varcall_dir_path / (ASSEMBLY + "." + PLOIDY + ".mpileup.vcf.gz"),
         call=varcall_dir_path / (ASSEMBLY + "." + PLOIDY + ".vcf.gz")
