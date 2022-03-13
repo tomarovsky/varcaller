@@ -43,7 +43,7 @@ rule bcftools_varcall:
 
 
 if config["subset_after_filter"]:
-    rule bcftools_filter_1:
+    rule bcftools_filter:
         input:
             mpileup=rules.bcftools_varcall.output.mpileup,
             call=rules.bcftools_varcall.output.call
@@ -70,7 +70,7 @@ if config["subset_after_filter"]:
             "bcftools filter -Oz -s {params.soft_filter} --exclude '{params.exclude}' {input.call} > {output.filt_vcf} 2> {log.std}; "
 
 
-    checkpoint bcftools_vcf_subset_2:
+    checkpoint bcftools_vcf_subset:
         input:
             rules.bcftools_filter.output.filt_vcf
         output:
@@ -100,7 +100,7 @@ if config["subset_after_filter"]:
 
 
 else:
-    checkpoint bcftools_vcf_subset_1:
+    checkpoint bcftools_vcf_subset:
         input:
             rules.bcftools_varcall.output.call
         output:
@@ -129,7 +129,7 @@ else:
             "done; "
 
 
-    rule bcftools_filter_2:
+    rule bcftools_filter:
         input:
             vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.raw.vcf.gz"
         output:
