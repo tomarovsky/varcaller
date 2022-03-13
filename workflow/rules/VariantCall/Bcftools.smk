@@ -1,11 +1,10 @@
-# ruleorder: bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall > bcftools_filter
-ruleorder: bcftools_varcall > bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp
-
 rule bcftools_varcall:
     input:
         assembly=FASTA,
         samples=expand(alignment_dir_path / "{sample}/{assembly}.{sample}.sorted.mkdup.bam", assembly=ASSEMBLY, sample=SAMPLES.sample_id),
-        indexes=expand(alignment_dir_path / "{sample}/{assembly}.{sample}.sorted.mkdup.bam.bai", assembly=ASSEMBLY, sample=SAMPLES.sample_id)
+        indexes=expand(alignment_dir_path / "{sample}/{assembly}.{sample}.sorted.mkdup.bam.bai", assembly=ASSEMBLY, sample=SAMPLES.sample_id),
+        samples_file=assembly_stats_dir_path / "{assembly}.samples.file",
+        ploidy_file=assembly_stats_dir_path / "{assembly}.ploidy.file"
     output:
         mpileup=varcall_dir_path / (ASSEMBLY + "." + PLOIDY + ".mpileup.vcf.gz"),
         call=varcall_dir_path / (ASSEMBLY + "." + PLOIDY + ".vcf.gz")
@@ -42,6 +41,7 @@ rule bcftools_varcall:
 
 
 if config["vcf_subset_after_filter"]:
+    ruleorder: bcftools_varcall > bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp
     rule bcftools_filter:
         input:
             mpileup=rules.bcftools_varcall.output.mpileup,
@@ -99,7 +99,8 @@ if config["vcf_subset_after_filter"]:
 
 
 else:
-    checkpoint bcftools_vcf_subset:
+    ruleorder: bcftools_varcall > bcftools_vcf_subset_and_filter > bcftools_filter_hetero_homo > bcftools_filter_indel_snp
+    checkpoint bcftools_vcf_subset_and_filter:
         input:
             mpileup=rules.bcftools_varcall.output.mpileup,
             call=rules.bcftools_varcall.output.call
@@ -131,33 +132,6 @@ else:
             "bcftools filter -Oz -s {params.soft_filter} --exclude '{params.exclude}' "
             "{output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.vcf.gz 2> {log.std}; "
             "done; "
-
-
-    # rule bcftools_filter:
-    #     input:
-    #         vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.raw.vcf.gz"
-    #     output:
-    #         vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.vcf.gz"
-    #     params:
-    #         soft_filter=config["bcftools_filter_soft_filter"],
-    #         exclude=config["bcftools_filter_exclude"],
-    #     log:
-    #         std=log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.log",
-    #         cluster_log=cluster_log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.cluster.log",
-    #         cluster_err=cluster_log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.cluster.err"
-    #     benchmark:
-    #         benchmark_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.benchmark.txt"
-    #     conda:
-    #         "../../../%s" % config["conda_config"]
-    #     resources:
-    #         cpus=config["bcftools_filter_threads"],
-    #         mem=config["bcftools_filter_mem_mb"],
-    #         time=config["bcftools_filter_time"]
-    #     threads:
-    #         config["bcftools_filter_threads"]
-    #     shell:
-    #         "bcftools filter -Oz -s {params.soft_filter} --exclude '{params.exclude}' {input} > {output} 2> {log.std}; "
-
 
 
 rule bcftools_filter_indel_snp:
