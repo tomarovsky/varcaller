@@ -1,3 +1,4 @@
+ruleorder: pseudoautosomal_region > ploidy_file > samples_file > bcftools_varcall
 rule bcftools_varcall:
     input:
         assembly=FASTA,
