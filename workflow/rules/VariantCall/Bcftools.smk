@@ -1,8 +1,4 @@
-# ruleorder: bcftools_vcf_subset > create_subset_out_dirs > bcftools_filter_indel_snp > bcftools_varcall > bcftools_filter
-if not config["vcf_subset_after_filter"]:
-    ruleorder: bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall > bcftools_filter
-else:
-    ruleorder: bcftools_filter > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall > bcftools_vcf_subset
+ruleorder: bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall > bcftools_filter
 
 rule bcftools_varcall:
     input:
@@ -104,7 +100,8 @@ if config["vcf_subset_after_filter"]:
 else:
     checkpoint bcftools_vcf_subset:
         input:
-            rules.bcftools_varcall.output.call
+            mpileup=rules.bcftools_varcall.output.mpileup,
+            call=rules.bcftools_varcall.output.call
         output:
             dir=directory(vcf_subset_dir_path)
         params:
@@ -124,7 +121,7 @@ else:
         threads:
             config["bcftools_vcf_subset_threads"]
         shell:
-            "for SUBSET in `bcftools query -l {input}`; "
+            "for SUBSET in `bcftools query -l {input.call}`; "
             "do mkdir -p {output.dir}/$SUBSET; "
             "echo $SUBSET >> {params.variants}; "
             "bcftools view -Oz -s $SUBSET {input} > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz 2> {log.std}; "
