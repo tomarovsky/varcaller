@@ -124,7 +124,7 @@ else:
             "for SUBSET in `bcftools query -l {input.call}`; "
             "do mkdir -p {output.dir}/$SUBSET; "
             "echo $SUBSET >> {params.variants}; "
-            "bcftools view -Oz -s $SUBSET {input} > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz 2> {log.std}; "
+            "bcftools view -Oz -s $SUBSET {input.call} > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz 2> {log.std}; "
             "done; "
 
 
