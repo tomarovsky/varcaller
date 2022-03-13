@@ -1,5 +1,6 @@
 # ruleorder: bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall > bcftools_filter
 ruleorder: bcftools_varcall > bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp
+
 rule bcftools_varcall:
     input:
         assembly=FASTA,
@@ -129,7 +130,6 @@ else:
             "bcftools view -Oz -s $SUBSET {input.call} > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz 2> {log.std}; "
             "bcftools filter -Oz -s {params.soft_filter} --exclude '{params.exclude}' "
             "{output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.vcf.gz 2> {log.std}; "
-            # "rm {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz; "
             "done; "
 
 
