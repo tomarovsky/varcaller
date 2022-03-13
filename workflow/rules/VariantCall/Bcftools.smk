@@ -18,7 +18,7 @@ rule bcftools_varcall:
         min_MQ=config["bcftools_mpileup_min_MQ"],
         min_BQ=config["bcftools_mpileup_min_BQ"],
         samples_file=assembly_stats_dir_path / (ASSEMBLY + ".samples.file") if ploidy_of_ChrX else '',
-        regions_file=assembly_stats_dir_path / (ASSEMBLY + ".ploidy.file") if ploidy_of_ChrX else ''
+        ploidy_file=assembly_stats_dir_path / (ASSEMBLY + ".ploidy.file") if ploidy_of_ChrX else ''
     log:
         mpileup=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_mpileup.log"),
         call=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_call.log"),
@@ -37,7 +37,7 @@ rule bcftools_varcall:
     shell:
         "bcftools mpileup --threads {threads} -d {params.max_depth} -q {params.min_MQ} -Q {params.min_BQ} "
         "--adjust-MQ {params.adjustMQ} --annotate {params.annotate_mpileup} -Oz "
-        "--samples-file {params.samples_file} --regions-file {params.regions_file} "
+        "--samples-file {params.samples_file} --ploidy-file {params.ploidy_file} "
         "-f {input.assembly} {input.samples} 2> {log.mpileup} | "
         "tee {output.mpileup} | bcftools call -Oz -mv --annotate {params.annotate_call} > {output.call} 2> {log.call}"
 
