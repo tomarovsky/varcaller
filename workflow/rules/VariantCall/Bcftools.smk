@@ -1,3 +1,5 @@
+ruleorder: bcftools_varcall > bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp
+
 rule bcftools_varcall:
     input:
         assembly=FASTA,
@@ -41,7 +43,6 @@ rule bcftools_varcall:
 
 
 if config["vcf_subset_after_filter"]:
-    ruleorder: bcftools_varcall > bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp
     rule bcftools_filter:
         input:
             mpileup=rules.bcftools_varcall.output.mpileup,
@@ -99,8 +100,7 @@ if config["vcf_subset_after_filter"]:
 
 
 else:
-    ruleorder: bcftools_varcall > bcftools_vcf_subset_and_filter > bcftools_filter_hetero_homo > bcftools_filter_indel_snp
-    checkpoint bcftools_vcf_subset_and_filter:
+    checkpoint bcftools_vcf_subset:
         input:
             mpileup=rules.bcftools_varcall.output.mpileup,
             call=rules.bcftools_varcall.output.call
