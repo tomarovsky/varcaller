@@ -131,7 +131,7 @@ else:
 
     rule bcftools_filter:
         input:
-            lambda wildcards: aggregate_file_names(str(vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.raw.vcf.gz"), assembly=ASSEMBLY, ploidy=PLOIDY)
+            vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.raw.vcf.gz"
         output:
             vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.vcf.gz"
         params:
