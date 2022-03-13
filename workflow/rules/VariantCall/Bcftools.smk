@@ -129,7 +129,7 @@ else:
             "bcftools view -Oz -s $SUBSET {input.call} > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz 2> {log.std}; "
             "bcftools filter -Oz -s {params.soft_filter} --exclude '{params.exclude}' "
             "{output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.vcf.gz 2> {log.std}; "
-            "rm {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz"
+            "rm {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz; "
             "done; "
 
 
