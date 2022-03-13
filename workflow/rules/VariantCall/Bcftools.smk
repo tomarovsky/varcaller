@@ -3,8 +3,8 @@ rule bcftools_varcall:
         assembly=FASTA,
         samples=expand(alignment_dir_path / "{sample}/{assembly}.{sample}.sorted.mkdup.bam", assembly=ASSEMBLY, sample=SAMPLES.sample_id),
         indexes=expand(alignment_dir_path / "{sample}/{assembly}.{sample}.sorted.mkdup.bam.bai", assembly=ASSEMBLY, sample=SAMPLES.sample_id),
-        samples_file=assembly_stats_dir_path / (ASSEMBLY + ".samples.file") if ploidy_of_ChrX else '',
-        ploidy_file=assembly_stats_dir_path / (ASSEMBLY + ".ploidy.file") if ploidy_of_ChrX else ''
+        samples_file=assembly_stats_dir_path / (ASSEMBLY + ".samples.file"),
+        ploidy_file=assembly_stats_dir_path / (ASSEMBLY + ".ploidy.file")
     output:
         mpileup=varcall_dir_path / (ASSEMBLY + "." + PLOIDY + ".mpileup.vcf.gz"),
         call=varcall_dir_path / (ASSEMBLY + "." + PLOIDY + ".vcf.gz")
@@ -14,7 +14,9 @@ rule bcftools_varcall:
         annotate_call=config["bcftools_call_annotate"],
         max_depth=config["bcftools_mpileup_max_depth"],
         min_MQ=config["bcftools_mpileup_min_MQ"],
-        min_BQ=config["bcftools_mpileup_min_BQ"]
+        min_BQ=config["bcftools_mpileup_min_BQ"],
+        samples_file=assembly_stats_dir_path / (ASSEMBLY + ".samples.file") if ploidy_of_ChrX else '',
+        ploidy_file=assembly_stats_dir_path / (ASSEMBLY + ".ploidy.file") if ploidy_of_ChrX else ''
     log:
         mpileup=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_mpileup.log"),
         call=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_call.log"),
@@ -34,7 +36,7 @@ rule bcftools_varcall:
         "bcftools mpileup --threads {threads} -d {params.max_depth} -q {params.min_MQ} -Q {params.min_BQ} "
         "--adjust-MQ {params.adjustMQ} --annotate {params.annotate_mpileup} -Oz "
         "-f {input.assembly} {input.samples} 2> {log.mpileup} | tee {output.mpileup} | "
-        "bcftools call --samples-file {input.samples_file} --ploidy-file {input.ploidy_file} "
+        "bcftools call --samples-file {params.samples_file} --ploidy-file {params.ploidy_file} "
         "-Oz -mv --annotate {params.annotate_call} > {output.call} 2> {log.call}"
 
 
