@@ -46,9 +46,8 @@ rule all:
         expand(alignment_dir_path / "{sample}/{assembly}.{sample}.sorted.mkdup.bam.bai", assembly=ASSEMBLY, sample=SAMPLES.sample_id),
 
         # variant calling
-        # lambda wildcards: aggregate_file_names(str(vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.raw.vcf.gz"), assembly=ASSEMBLY, ploidy=PLOIDY),
-        # lambda wildcards: aggregate_file_names(str(vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.{var_type}.vcf.gz"), assembly=ASSEMBLY, ploidy=PLOIDY, var_type=VAR_TYPE),
-        # lambda wildcards: aggregate_file_names(str(vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.{var_type}.{zygosity}.vcf.gz"), assembly=ASSEMBLY, ploidy=PLOIDY, var_type=VAR_TYPE, zygosity=ZYGOSITY),
+        lambda wildcards: aggregate_file_names(str(vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.{var_type}.vcf.gz"), assembly=ASSEMBLY, ploidy=PLOIDY, var_type=VAR_TYPE),
+        lambda wildcards: aggregate_file_names(str(vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.{var_type}.{zygosity}.vcf.gz"), assembly=ASSEMBLY, ploidy=PLOIDY, var_type=VAR_TYPE, zygosity=ZYGOSITY),
 
         # draw densities
         lambda wildcards: aggregate_file_names(str(vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.{var_type}.{zygosity}.{size_and_step}.jet.png"), assembly=ASSEMBLY, ploidy=PLOIDY, var_type=VAR_TYPE, zygosity=ZYGOSITY, size_and_step=SIZE_AND_STEP),
