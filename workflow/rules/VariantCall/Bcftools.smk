@@ -1,5 +1,5 @@
 # ruleorder: bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall > bcftools_filter
-
+ruleorder: bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall
 rule bcftools_varcall:
     input:
         assembly=FASTA,
