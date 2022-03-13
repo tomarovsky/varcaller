@@ -1,6 +1,8 @@
 # ruleorder: bcftools_vcf_subset > create_subset_out_dirs > bcftools_filter_indel_snp > bcftools_varcall > bcftools_filter
-# ruleorder: bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall > bcftools_filter
-ruleorder: bcftools_filter_hetero_homo > bcftools_filter_indel_snp
+if config["vcf_subset_after_filter"]:
+    ruleorder: bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall > bcftools_filter
+else:
+    ruleorder: bcftools_filter > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall > bcftools_vcf_subset
 
 rule bcftools_varcall:
     input:
