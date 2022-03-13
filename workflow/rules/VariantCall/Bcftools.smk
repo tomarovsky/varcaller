@@ -14,9 +14,7 @@ rule bcftools_varcall:
         annotate_call=config["bcftools_call_annotate"],
         max_depth=config["bcftools_mpileup_max_depth"],
         min_MQ=config["bcftools_mpileup_min_MQ"],
-        min_BQ=config["bcftools_mpileup_min_BQ"],
-        # samples_file=assembly_stats_dir_path / (ASSEMBLY + ".samples.file") if ploidy_of_ChrX else '',
-        # ploidy_file=assembly_stats_dir_path / (ASSEMBLY + ".ploidy.file") if ploidy_of_ChrX else ''
+        min_BQ=config["bcftools_mpileup_min_BQ"]
     log:
         mpileup=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_mpileup.log"),
         call=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_call.log"),
