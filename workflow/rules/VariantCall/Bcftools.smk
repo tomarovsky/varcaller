@@ -1,4 +1,4 @@
-ruleorder: bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall > bcftools_filter
+# ruleorder: bcftools_vcf_subset > bcftools_filter_hetero_homo > bcftools_filter_indel_snp > bcftools_varcall > bcftools_filter
 
 rule bcftools_varcall:
     input:
@@ -105,7 +105,9 @@ else:
         output:
             dir=directory(vcf_subset_dir_path)
         params:
-            variants=vcf_subset_dir_path / (ASSEMBLY + "." + PLOIDY + ".csv")
+            variants=vcf_subset_dir_path / (ASSEMBLY + "." + PLOIDY + ".csv"),
+            soft_filter=config["bcftools_filter_soft_filter"],
+            exclude=config["bcftools_filter_exclude"]
         log:
             std=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.log"),
             cluster_log=cluster_log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.cluster.log"),
@@ -125,33 +127,36 @@ else:
             "do mkdir -p {output.dir}/$SUBSET; "
             "echo $SUBSET >> {params.variants}; "
             "bcftools view -Oz -s $SUBSET {input.call} > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz 2> {log.std}; "
+            "bcftools filter -Oz -s {params.soft_filter} --exclude '{params.exclude}' "
+            "{output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.vcf.gz 2> {log.std}; "
+            "rm {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz"
             "done; "
 
 
-    rule bcftools_filter:
-        input:
-            vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.raw.vcf.gz"
-        output:
-            vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.vcf.gz"
-        params:
-            soft_filter=config["bcftools_filter_soft_filter"],
-            exclude=config["bcftools_filter_exclude"],
-        log:
-            std=log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.log",
-            cluster_log=cluster_log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.cluster.log",
-            cluster_err=cluster_log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.cluster.err"
-        benchmark:
-            benchmark_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.benchmark.txt"
-        conda:
-            "../../../%s" % config["conda_config"]
-        resources:
-            cpus=config["bcftools_filter_threads"],
-            mem=config["bcftools_filter_mem_mb"],
-            time=config["bcftools_filter_time"]
-        threads:
-            config["bcftools_filter_threads"]
-        shell:
-            "bcftools filter -Oz -s {params.soft_filter} --exclude '{params.exclude}' {input} > {output} 2> {log.std}; "
+    # rule bcftools_filter:
+    #     input:
+    #         vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.raw.vcf.gz"
+    #     output:
+    #         vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.vcf.gz"
+    #     params:
+    #         soft_filter=config["bcftools_filter_soft_filter"],
+    #         exclude=config["bcftools_filter_exclude"],
+    #     log:
+    #         std=log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.log",
+    #         cluster_log=cluster_log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.cluster.log",
+    #         cluster_err=cluster_log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.cluster.err"
+    #     benchmark:
+    #         benchmark_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.benchmark.txt"
+    #     conda:
+    #         "../../../%s" % config["conda_config"]
+    #     resources:
+    #         cpus=config["bcftools_filter_threads"],
+    #         mem=config["bcftools_filter_mem_mb"],
+    #         time=config["bcftools_filter_time"]
+    #     threads:
+    #         config["bcftools_filter_threads"]
+    #     shell:
+    #         "bcftools filter -Oz -s {params.soft_filter} --exclude '{params.exclude}' {input} > {output} 2> {log.std}; "
 
 
 
