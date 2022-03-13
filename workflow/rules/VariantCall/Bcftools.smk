@@ -37,9 +37,9 @@ rule bcftools_varcall:
     shell:
         "bcftools mpileup --threads {threads} -d {params.max_depth} -q {params.min_MQ} -Q {params.min_BQ} "
         "--adjust-MQ {params.adjustMQ} --annotate {params.annotate_mpileup} -Oz "
-        "--samples-file {params.samples_file} --ploidy-file {params.ploidy_file} "
-        "-f {input.assembly} {input.samples} 2> {log.mpileup} | "
-        "tee {output.mpileup} | bcftools call -Oz -mv --annotate {params.annotate_call} > {output.call} 2> {log.call}"
+        "-f {input.assembly} {input.samples} 2> {log.mpileup} | tee {output.mpileup} | "
+        "bcftools call --samples-file {params.samples_file} --ploidy-file {params.ploidy_file} "
+        "-Oz -mv --annotate {params.annotate_call} > {output.call} 2> {log.call}"
 
 
 if config["subset_after_filter"]:
