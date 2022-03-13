@@ -42,60 +42,118 @@ rule bcftools_varcall:
         "tee {output.mpileup} | bcftools call -Oz -mv --annotate {params.annotate_call} > {output.call} 2> {log.call}"
 
 
-rule bcftools_filter:
-    input:
-        mpileup=rules.bcftools_varcall.output.mpileup,
-        call=rules.bcftools_varcall.output.call
-    output:
-        filt_vcf=varcall_dir_path / (ASSEMBLY + "." + PLOIDY + ".filt.vcf.gz")
-    params:
-        soft_filter=config["bcftools_filter_soft_filter"],
-        exclude=config["bcftools_filter_exclude"],
-    log:
-        std=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_filter.log"),
-        cluster_log=cluster_log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_filter.cluster.log"),
-        cluster_err=cluster_log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_filter.cluster.err")
-    benchmark:
-        benchmark_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_filter.benchmark.txt")
-    conda:
-        "../../../%s" % config["conda_config"]
-    resources:
-        cpus=config["bcftools_filter_threads"],
-        mem=config["bcftools_filter_mem_mb"],
-        time=config["bcftools_filter_time"]
-    threads:
-        config["bcftools_filter_threads"]
-    shell:
-        "bcftools filter -Oz -s {params.soft_filter} --exclude '{params.exclude}' {input.call} > {output.filt_vcf} 2> {log.std}; "
+if config["subset_after_filter"]:
+    rule bcftools_filter_1:
+        input:
+            mpileup=rules.bcftools_varcall.output.mpileup,
+            call=rules.bcftools_varcall.output.call
+        output:
+            filt_vcf=varcall_dir_path / (ASSEMBLY + "." + PLOIDY + ".filt.vcf.gz")
+        params:
+            soft_filter=config["bcftools_filter_soft_filter"],
+            exclude=config["bcftools_filter_exclude"],
+        log:
+            std=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_filter.log"),
+            cluster_log=cluster_log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_filter.cluster.log"),
+            cluster_err=cluster_log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_filter.cluster.err")
+        benchmark:
+            benchmark_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_filter.benchmark.txt")
+        conda:
+            "../../../%s" % config["conda_config"]
+        resources:
+            cpus=config["bcftools_filter_threads"],
+            mem=config["bcftools_filter_mem_mb"],
+            time=config["bcftools_filter_time"]
+        threads:
+            config["bcftools_filter_threads"]
+        shell:
+            "bcftools filter -Oz -s {params.soft_filter} --exclude '{params.exclude}' {input.call} > {output.filt_vcf} 2> {log.std}; "
 
 
-checkpoint bcftools_vcf_subset:
-    input:
-        rules.bcftools_filter.output.filt_vcf
-    output:
-        dir=directory(vcf_subset_dir_path)
-    params:
-        variants=vcf_subset_dir_path / (ASSEMBLY + "." + PLOIDY + ".csv")
-    log:
-        std=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.log"),
-        cluster_log=cluster_log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.cluster.log"),
-        cluster_err=cluster_log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.cluster.err")
-    benchmark:
-        benchmark_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.benchmark.txt")
-    conda:
-        "../../../%s" % config["conda_config"]
-    resources:
-        cpus=config["bcftools_vcf_subset_threads"],
-        mem=config["bcftools_vcf_subset_mem_mb"],
-        time=config["bcftools_vcf_subset_time"]
-    threads:
-        config["bcftools_vcf_subset_threads"]
-    shell:
-        "for SUBSET in `bcftools query -l {input}`; "
-        "do mkdir -p {output.dir}/$SUBSET; "
-        "echo $SUBSET >> {params.variants}; "
-        "bcftools view -Oz -s $SUBSET {input} > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.vcf.gz 2> {log.std}; "
-        "done; "
+    checkpoint bcftools_vcf_subset_2:
+        input:
+            rules.bcftools_filter.output.filt_vcf
+        output:
+            dir=directory(vcf_subset_dir_path)
+        params:
+            variants=vcf_subset_dir_path / (ASSEMBLY + "." + PLOIDY + ".csv")
+        log:
+            std=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.log"),
+            cluster_log=cluster_log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.cluster.log"),
+            cluster_err=cluster_log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.cluster.err")
+        benchmark:
+            benchmark_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.benchmark.txt")
+        conda:
+            "../../../%s" % config["conda_config"]
+        resources:
+            cpus=config["bcftools_vcf_subset_threads"],
+            mem=config["bcftools_vcf_subset_mem_mb"],
+            time=config["bcftools_vcf_subset_time"]
+        threads:
+            config["bcftools_vcf_subset_threads"]
+        shell:
+            "for SUBSET in `bcftools query -l {input}`; "
+            "do mkdir -p {output.dir}/$SUBSET; "
+            "echo $SUBSET >> {params.variants}; "
+            "bcftools view -Oz -s $SUBSET {input} > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.vcf.gz 2> {log.std}; "
+            "done; "
+
+
+else:
+    checkpoint bcftools_vcf_subset_1:
+        input:
+            rules.bcftools_varcall.output.call
+        output:
+            dir=directory(vcf_subset_dir_path)
+        params:
+            variants=vcf_subset_dir_path / (ASSEMBLY + "." + PLOIDY + ".csv")
+        log:
+            std=log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.log"),
+            cluster_log=cluster_log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.cluster.log"),
+            cluster_err=cluster_log_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.cluster.err")
+        benchmark:
+            benchmark_dir_path / (ASSEMBLY + "." + PLOIDY + ".bcftools_vcf_subset.benchmark.txt")
+        conda:
+            "../../../%s" % config["conda_config"]
+        resources:
+            cpus=config["bcftools_vcf_subset_threads"],
+            mem=config["bcftools_vcf_subset_mem_mb"],
+            time=config["bcftools_vcf_subset_time"]
+        threads:
+            config["bcftools_vcf_subset_threads"]
+        shell:
+            "for SUBSET in `bcftools query -l {input}`; "
+            "do mkdir -p {output.dir}/$SUBSET; "
+            "echo $SUBSET >> {params.variants}; "
+            "bcftools view -Oz -s $SUBSET {input} > {output.dir}/$SUBSET/{ASSEMBLY}.{PLOIDY}.raw.vcf.gz 2> {log.std}; "
+            "done; "
+
+
+    rule bcftools_filter_2:
+        input:
+            vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.raw.vcf.gz"
+        output:
+            vcf_subset_dir_path / "{subset}/{assembly}.{ploidy}.vcf.gz"
+        params:
+            soft_filter=config["bcftools_filter_soft_filter"],
+            exclude=config["bcftools_filter_exclude"],
+        log:
+            std=log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.log"),
+            cluster_log=cluster_log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.cluster.log"),
+            cluster_err=cluster_log_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.cluster.err")
+        benchmark:
+            benchmark_dir_path / "{subset}/{assembly}.{ploidy}.bcftools_filter.benchmark.txt")
+        conda:
+            "../../../%s" % config["conda_config"]
+        resources:
+            cpus=config["bcftools_filter_threads"],
+            mem=config["bcftools_filter_mem_mb"],
+            time=config["bcftools_filter_time"]
+        threads:
+            config["bcftools_filter_threads"]
+        shell:
+            "bcftools filter -Oz -s {params.soft_filter} --exclude '{params.exclude}' {input} > {output} 2> {log.std}; "
+
 
 
 rule bcftools_filter_indel_snp:
